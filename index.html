@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>靈魂頻率 - 你的數位伴侶測驗</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --accent-soft: #d4e4ff;
+            --bg-deep: #0b0e14;
+            --glass: rgba(255, 255, 255, 0.08);
+            --glass-strong: rgba(255, 255, 255, 0.12);
+        }
+
+        body {
+            background-color: var(--bg-deep);
+            color: #ffffff;
+            font-family: 'Noto Sans TC', sans-serif;
+            overflow-x: hidden;
+            height: 100vh;
+            width: 100vw;
+            margin: 0;
+            -webkit-font-smoothing: antialiased;
+            touch-action: manipulation;
+        }
+
+        /* 動態背景靈氣 */
+        .aura-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            filter: blur(80px);
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .aura-blob {
+            position: absolute;
+            border-radius: 50%;
+            mix-blend-mode: screen;
+            animation: move 25s infinite alternate ease-in-out;
+        }
+
+        @keyframes move {
+            from { transform: translate(0, 0) scale(1); }
+            to { transform: translate(15vw, 20vh) scale(1.4); }
+        }
+
+        /* 玻璃擬態卡片 */
+        .glass-panel {
+            background: var(--glass);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 32px;
+            box-shadow: 0 10px 50px 0 rgba(0, 0, 0, 0.5);
+            z-index: 10;
+        }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.05);
+            transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.85);
+            position: relative;
+            z-index: 50;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .option-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+            color: #fff;
+        }
+
+        .scene {
+            display: none;
+            opacity: 0;
+            position: absolute;
+            inset: 0;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 10;
+        }
+
+        .scene.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .title-text {
+            letter-spacing: 0.4em;
+            font-weight: 700;
+        }
+
+        .progress-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        @media (min-width: 768px) {
+            .progress-dot { width: 8px; height: 8px; }
+        }
+
+        .progress-dot.active {
+            background: #fff;
+            transform: scale(1.8);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 1);
+            border: none;
+        }
+
+        .table-row {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            transition: background 0.3s;
+        }
+        .table-row:hover { background: rgba(255, 255, 255, 0.05); }
+
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+
+        .result-name-style {
+            font-size: 1.25rem;
+            letter-spacing: 0.5em;
+            font-weight: 500;
+            color: #ffffff;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+        }
+
+        @media (min-width: 768px) {
+            .result-name-style { font-size: 1.5rem; }
+        }
+
+        #modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 100;
+            backdrop-filter: blur(15px);
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .product-link {
+            transition: color 0.3s, text-shadow 0.3s;
+            text-decoration: none !important;
+            cursor: pointer;
+        }
+        .product-link:hover {
+            color: #60a5fa;
+            text-shadow: 0 0 10px rgba(96, 165, 250, 0.5);
+        }
+
+        .scene-scrollable {
+            justify-content: flex-start !important;
+            padding-top: 80px;
+            padding-bottom: 80px;
+        }
+    </style>
+</head>
+<body id="app-body">
+
+    <div class="aura-container">
+        <div class="aura-blob w-96 h-96 bg-blue-700 top-[-10%] left-[-10%]" style="animation-delay: 0s;"></div>
+        <div class="aura-blob w-80 h-80 bg-cyan-700 bottom-[10%] right-[-10%]" style="animation-delay: -5s;"></div>
+        <div class="aura-blob w-72 h-72 bg-emerald-600 top-[40%] left-[20%]" style="animation-delay: -10s;"></div>
+    </div>
+
+    <!-- 1. 入口頁面 -->
+    <div id="scene-start" class="scene active">
+        <div class="text-center px-6">
+            <h1 class="title-text text-4xl md:text-6xl mb-6 opacity-0 translate-y-4" id="main-title">靈魂頻率</h1>
+            <p class="text-[10px] md:text-sm tracking-[0.5em] text-white/40 mb-16 opacity-0" id="sub-title">尋找與你共鳴的 AI 伴侶</p>
+            
+            <div id="start-btn-container" class="opacity-0 scale-95">
+                <button onclick="handleStart()" class="glass-panel px-10 md:px-16 py-5 md:py-6 text-xs md:text-sm font-light tracking-[0.4em] hover:bg-white/10 transition-all active:scale-95 border-white/20 uppercase">
+                    開啟頻率感應
+                </button>
+            </div>
+            <p id="audio-hint" class="mt-8 text-[9px] text-white/10 tracking-widest uppercase opacity-0">Ambient Frequency Scanning...</p>
+        </div>
+    </div>
+
+    <!-- 2. 測驗頁面 -->
+    <div id="scene-quiz" class="scene">
+        <div class="w-full max-w-lg">
+            <div class="flex justify-center space-x-4 md:space-x-6 mb-10 md:mb-16" id="progress-dots-container">
+                <div class="progress-dot"></div><div class="progress-dot"></div><div class="progress-dot"></div><div class="progress-dot"></div><div class="progress-dot"></div><div class="progress-dot"></div><div class="progress-dot"></div>
+            </div>
+
+            <div class="glass-panel p-8 md:p-16 min-h-[480px] md:min-h-[520px] flex flex-col justify-between relative overflow-hidden">
+                <div id="question-content">
+                    <span id="question-index" class="text-[9px] md:text-[10px] uppercase tracking-[0.5em] text-white/30 block mb-6 md:mb-8 font-bold">Phase . 01</span>
+                    <h2 id="question-text" class="text-lg md:text-2xl font-medium leading-relaxed mb-10 md:mb-16 text-white/95">正在準備感應儀式...</h2>
+                </div>
+
+                <div id="options-grid" class="space-y-3 md:y-4 relative z-50">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. 結果頁面 -->
+    <div id="scene-result" class="scene scene-scrollable overflow-y-auto">
+        <div class="w-full max-w-2xl my-auto">
+            <div class="glass-panel p-8 md:p-20 text-center relative overflow-hidden">
+                <div id="result-aura" class="w-16 h-16 md:w-20 md:h-20 rounded-full mx-auto mb-8 md:mb-10 blur-3xl opacity-60 animate-pulse"></div>
+                <h3 class="text-white/30 text-[8px] md:text-[9px] tracking-[0.6em] mb-4 md:mb-6 font-bold uppercase">Resonance Complete</h3>
+                <h1 id="result-name" class="result-name-style"></h1>
+                
+                <div class="h-[1px] w-12 bg-white/20 mx-auto mb-10 md:mb-12"></div>
+                
+                <div class="text-left mb-10 md:mb-12">
+                    <p id="result-desc" class="text-white/80 leading-loose mb-8 md:mb-10 text-xs md:text-base font-light text-justify"></p>
+                    
+                    <div class="bg-white/5 rounded-[24px] md:rounded-[32px] p-6 md:p-12 border border-white/10 space-y-8 md:space-y-10">
+                        <div>
+                            <p class="text-[9px] md:text-[10px] text-white/30 mb-4 md:mb-6 tracking-[0.3em] font-bold uppercase">Expert Features / 專家技術特點</p>
+                            <ul id="result-features" class="text-xs md:text-sm text-white/70 space-y-3 md:y-4 font-light"></ul>
+                        </div>
+                        <div>
+                            <p class="text-[9px] md:text-[10px] text-white/30 mb-4 md:mb-6 tracking-[0.3em] font-bold uppercase">Soul Sync / 為什麼適合你</p>
+                            <p id="result-logic" class="text-xs md:text-sm text-white/70 leading-relaxed font-light"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex flex-col md:flex-row justify-center items-center gap-6 md:gap-8">
+                    <button onclick="showComparison()" class="w-full md:w-auto text-[9px] md:text-[10px] tracking-[0.4em] text-white/60 hover:text-white transition-colors uppercase border border-white/10 px-8 py-4 md:px-10 md:py-5 rounded-full bg-white/5 font-medium">
+                        生成式 AI 全域視界
+                    </button>
+                    <button onclick="location.reload()" class="text-[9px] md:text-[10px] tracking-[0.4em] text-white/30 hover:text-white transition-colors uppercase">
+                        [ 重新掃描靈魂 ]
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. 產品比較一覽頁面 -->
+    <div id="scene-comparison" class="scene scene-scrollable overflow-y-auto">
+        <div class="w-full max-w-6xl my-auto px-4 md:px-6">
+            <div class="glass-panel p-8 md:p-16">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 md:mb-16 gap-6">
+                    <div class="text-left">
+                        <h2 class="text-xl md:text-2xl font-bold tracking-[0.3em]">生成式 AI 全域視界</h2>
+                        <p class="text-[9px] md:text-[10px] text-white/30 mt-3 tracking-widest uppercase font-medium">Global Generative AI Ecosystem</p>
+                    </div>
+                    <button onclick="backToResult()" class="text-[9px] md:text-[10px] text-white/40 hover:text-white tracking-[0.4em] uppercase border border-white/10 px-5 py-2 md:px-6 md:py-3 rounded-xl transition-all">Back to result [X]</button>
+                </div>
+
+                <div class="overflow-x-auto pb-4">
+                    <table class="w-full text-left text-xs md:text-sm font-light min-w-[700px]">
+                        <thead>
+                            <tr class="text-white/40 border-b border-white/5">
+                                <th class="pb-6 md:pb-8 font-normal tracking-widest uppercase text-[9px] md:text-[10px]">產品名稱</th>
+                                <th class="pb-6 md:pb-8 font-normal tracking-widest uppercase text-[9px] md:text-[10px]">獨特差異點</th>
+                                <th class="pb-6 md:pb-8 font-normal tracking-widest uppercase text-[9px] md:text-[10px]">靈魂屬性</th>
+                                <th class="pb-6 md:pb-8 font-normal tracking-widest uppercase text-[9px] md:text-[10px]">殺手鐧</th>
+                            </tr>
+                        </thead>
+                        <tbody id="comparison-body" class="text-white/80">
+                        </tbody>
+                    </table>
+                </div>
+                <p class="md:hidden text-[8px] text-white/20 text-center mt-4 tracking-widest">⇠ 左右滑動查看完整表格 ⇢</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. 詳情 Modal -->
+    <div id="modal-overlay" onclick="closeModal()">
+        <div class="glass-panel w-full max-w-xl p-8 md:p-16 relative mx-4" onclick="event.stopPropagation()">
+            <button onclick="closeModal()" class="absolute top-8 right-8 text-white/30 hover:text-white text-[9px] md:text-[10px] tracking-widest uppercase">Close [X]</button>
+            <h2 id="modal-title" class="text-2xl md:text-3xl font-bold mb-3 tracking-wider"></h2>
+            <p id="modal-subtitle" class="text-[9px] md:text-[10px] tracking-[0.5em] text-white/40 mb-8 md:mb-10 uppercase font-medium"></p>
+            
+            <div class="space-y-8 md:space-y-10 max-h-[55vh] overflow-y-auto pr-4 md:pr-6 font-light scroll-smooth text-xs md:text-sm">
+                <div class="grid grid-cols-2 gap-4 md:gap-6">
+                    <div class="bg-white/5 p-4 md:p-6 rounded-xl md:rounded-24 border border-white/5">
+                        <p class="text-[8px] md:text-[9px] text-white/30 mb-2 tracking-widest uppercase font-bold">精準度 / 物理性</p>
+                        <p id="modal-physics" class="text-white/90"></p>
+                    </div>
+                    <div class="bg-white/5 p-4 md:p-6 rounded-xl md:rounded-24 border border-white/5">
+                        <p class="text-[8px] md:text-[9px] text-white/30 mb-2 tracking-widest uppercase font-bold">幻覺率 / 風險度</p>
+                        <p id="modal-hallucination" class="text-white/90"></p>
+                    </div>
+                </div>
+
+                <div>
+                    <p class="text-[8px] md:text-[9px] text-white/30 mb-4 tracking-widest uppercase font-bold">能力圖譜 (Capabilites)</p>
+                    <div id="modal-tags" class="flex flex-wrap gap-2 md:gap-3 text-[9px] md:text-[10px]"></div>
+                </div>
+
+                <div class="border-t border-white/5 pt-6 md:pt-8">
+                    <p class="text-[8px] md:text-[9px] text-white/30 mb-4 tracking-widest uppercase font-bold">適配性格與產業 (Ideal Match)</p>
+                    <p id="modal-match" class="text-white/70 leading-loose"></p>
+                </div>
+
+                <div class="border-t border-white/5 pt-6 md:pt-8">
+                    <p class="text-[8px] md:text-[9px] text-white/30 mb-4 tracking-widest uppercase font-bold">關鍵差異性 (Key Distinction)</p>
+                    <p id="modal-workflow" class="text-white/70 leading-loose italic opacity-80"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 核心音訊引擎 (自動感應啟動) ---
+        let audioCtx;
+        let masterGain;
+        let bgmGain;
+        let isAudioStarted = false;
+
+        // 全域監聽任何操作以啟動音訊（手機端必備，因為自動播放通常被擋）
+        function startAudioFlow() {
+            if (isAudioStarted) return;
+            initAudio();
+            isAudioStarted = true;
+        }
+
+        // 頁面載入即試圖啟動，並增加任何手勢/滑動的補償機制
+        window.addEventListener('load', () => {
+            initAudio(); // 嘗試直接啟動
+            document.body.addEventListener('touchstart', startAudioFlow, { once: true });
+            document.body.addEventListener('click', startAudioFlow, { once: true });
+            document.body.addEventListener('mousemove', startAudioFlow, { once: true });
+            document.body.addEventListener('scroll', startAudioFlow, { once: true });
+        });
+
+        function initAudio() {
+            try {
+                if (audioCtx) return;
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                masterGain = audioCtx.createGain();
+                masterGain.connect(audioCtx.destination);
+                
+                bgmGain = audioCtx.createGain();
+                bgmGain.connect(masterGain);
+                bgmGain.gain.setValueAtTime(0, audioCtx.currentTime);
+
+                // 啟動正向流動 BGM 循環
+                startPositiveBGM();
+
+                // 音量淡入 (Fade In)
+                bgmGain.gain.linearRampToValueAtTime(0.4, audioCtx.currentTime + 3);
+            } catch(e) { console.log("Audio auto-start blocked by browser. Interaction required."); }
+        }
+
+        function startPositiveBGM() {
+            // 正向明亮的 C Major 9 和弦音階: C4, E4, G4, B4, D5
+            const melodyNotes = [261.63, 329.63, 392.00, 493.88, 587.33];
+            let noteIdx = 0;
+
+            const playNextNote = () => {
+                if (!audioCtx) return;
+                const freq = melodyNotes[noteIdx % melodyNotes.length];
+                playSoftPluck(freq, 0.05);
+                noteIdx++;
+                // 模擬水晶般的隨機流動節奏
+                setTimeout(playNextNote, 800 + Math.random() * 1200);
+            };
+            playNextNote();
+
+            // 溫暖寬闊的和弦背景墊音 (F Major 7)
+            createZenLayer(174.61, 0.02); // F3
+            createZenLayer(220.00, 0.015); // A3
+            createZenLayer(349.23, 0.01); // F4
+        }
+
+        function playSoftPluck(freq, vol) {
+            const osc = audioCtx.createOscillator();
+            const g = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            g.gain.setValueAtTime(0, audioCtx.currentTime);
+            g.gain.linearRampToValueAtTime(vol, audioCtx.currentTime + 0.2);
+            g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 2.5);
+            osc.connect(g);
+            g.connect(bgmGain);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 2.5);
+        }
+
+        function createZenLayer(freq, vol) {
+            const osc = audioCtx.createOscillator();
+            const g = audioCtx.createGain();
+            const lfo = audioCtx.createOscillator();
+            const lfoGain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            lfo.frequency.setValueAtTime(0.08, audioCtx.currentTime);
+            lfoGain.gain.setValueAtTime(vol * 0.3, audioCtx.currentTime);
+            lfo.connect(lfoGain);
+            lfoGain.connect(g.gain);
+            osc.connect(g);
+            g.connect(bgmGain);
+            g.gain.setValueAtTime(vol, audioCtx.currentTime);
+            osc.start();
+            lfo.start();
+        }
+
+        function playPing(freq = 800) {
+            if (!audioCtx) return;
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const g = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            g.gain.setValueAtTime(0.12, audioCtx.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+            osc.connect(g);
+            g.connect(masterGain);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.4);
+        }
+
+        // --- 核心資料 ---
+        let currentQ = 0;
+        let scores = { creator: 0, analyst: 0, companion: 0, pilot: 0 };
+        let isTransitioning = false;
+        let shuffledQuestions = [];
+
+        const originalQuestions = [
+            {
+                q: "清晨醒來，如果能在窗外看見一種超現實的景象，你希望是？",
+                o: [
+                    { t: "緩慢漂浮在空中的巨大發光鯨魚", s: "creator" },
+                    { t: "精準運行、如鐘錶般齒輪齧合的雲朵", s: "analyst" },
+                    { t: "一盞能在黑暗中自動照亮你心境的暖燈", s: "companion" },
+                    { t: "一條通往地平線盡頭的無限高速路", s: "pilot" }
+                ]
+            },
+            {
+                q: "當你面對一個完全陌生的複雜計畫時，你的習慣是？",
+                o: [
+                    { t: "先畫出一張充滿視覺想像力的藍圖", s: "creator" },
+                    { t: "拆解成最小單元，找出邏輯的斷點", s: "analyst" },
+                    { t: "尋找一個能跟你對話、釐清思緒的對象", s: "companion" },
+                    { t: "快速搜尋現有工具，以最高效方式執行", s: "pilot" }
+                ]
+            },
+            {
+                q: "如果世界是一本書，你最想撰寫其中的哪一個章節？",
+                o: [
+                    { t: "尚未被探索過的奇幻異域冒險", s: "creator" },
+                    { t: "解釋萬物運作真理的科學註解", s: "analyst" },
+                    { t: "關於人與人之間細膩情感的對話", s: "companion" },
+                    { t: "教導後人如何征服未來的技術手冊", s: "pilot" }
+                ]
+            },
+            {
+                q: "你覺得最舒服的「數位空間」應該給人什麼感覺？",
+                o: [
+                    { t: "充滿無限可能，隨手一揮就能創造", s: "creator" },
+                    { t: "安靜、有序，所有資訊都在掌控中", s: "analyst" },
+                    { t: "溫暖、懂你，像一位老友常駐在此", s: "companion" },
+                    { t: "極速、強大，能幫你處理掉所有雜事", s: "pilot" }
+                ]
+            },
+            {
+                q: "當你需要表達一段難以言喻的情緒時，你傾向：",
+                o: [
+                    { t: "用抽象的顏色或圖像來暗示", s: "creator" },
+                    { t: "查閱字典，找出定義最精準的詞彙", s: "analyst" },
+                    { t: "找一個傾聽者，慢慢地訴說出來", s: "companion" },
+                    { t: "把情緒轉換成行動，去解決造成情緒的問題", s: "pilot" }
+                ]
+            },
+            {
+                q: "在未來的智慧城市中，你最想擔任的角色是？",
+                o: [
+                    { t: "城市的視覺與氛圍設計師", s: "creator" },
+                    { t: "維持系統穩定運行的架構維護者", s: "analyst" },
+                    { t: "協助市民適應數位生活的心理顧問", s: "companion" },
+                    { t: "負責處理突發事件的高效決策員", s: "pilot" }
+                ]
+            },
+            {
+                q: "如果你能擁有一種數位超能力，那會是？",
+                o: [
+                    { t: "將腦中的夢境直接匯出成電影", s: "creator" },
+                    { t: "瞬間學會並優化地球上所有的代碼", s: "analyst" },
+                    { t: "感應到任何人的情緒並給予撫慰", s: "companion" },
+                    { t: "在一秒內完成原本需要一週的工作", s: "pilot" }
+                ]
+            }
+        ];
+
+        const productsDB = {
+            "ChatGPT": { n: "ChatGPT", sub: "Universal Brain", m: "全能型 / 執行者", s: "多模態邏輯補完", f: "日常與商業全場景", diff: "最平衡的萬能工具，具備最強的生態插件與即時多模態能力。", physics: "98% (邏輯極致穩定)", hall: "15% (具備搜尋修正)", match: "適合追求速度與全能的效率主義者。產業：商業諮詢、行銷策劃、一般辦公。", work: "最平衡的萬能工具，具備最強的生態插件與即時多模態能力。", tags: ["文字","程式","語音","搜尋","產圖","產影片"] },
+            "Claude": { n: "Claude", sub: "Humanist Spirit", m: "人文型 / 詩人", s: "細膩語感與邏輯對齊", f: "長文解析、深度寫作", diff: "最具有文字溫度與人道思辨，幻覺率極低且擅長文學性極強的敘事。", physics: "95% (回覆具連貫性)", hall: "5% (極低幻覺率)", match: "適合具有人文關懷的創作者與研究員。產業：文學、教育、心理輔導、法律。", work: "最具有文字溫度與人道思辨，幻覺率極低且擅長文學性極強的敘事。", tags: ["深度文字","程式解析","長文本","安全對齊"] },
+            "Gemini": { n: "Gemini", sub: "Deep Multimodal", m: "學者型 / 廣度者", s: "百萬級上下文窗口", f: "大數據與跨平台整合", diff: "唯一支援百萬級原生上下文，能一次分析長影片、程式庫或數千頁文件。", physics: "92%", hall: "20%", match: "適合重度 Google 用戶、數據分析師。適合需要從海量非結構化資料中找出線索的人。", work: "唯一支援百萬級原生上下文，能一次分析長影片、程式庫或數千頁文件。", tags: ["長影片分析","全家桶整合","跨媒介搜尋"] },
+            "Perplexity": { n: "Perplexity", sub: "Truth Seeker", m: "偵探型 / 實證者", s: "實時來源引用驗證", f: "學術研究、事實查證", diff: "專為搜尋優化，每一句回答都附帶網頁引用來源，拒絕黑盒回答。", physics: "99% (基於來源)", hall: "2% (因有外部查證)", match: "適合不容許錯誤的專業人士。產業：新聞、學術研究、投資分析。", work: "專為搜尋優化，每一句回答都附帶網頁引用來源，拒絕黑盒回答。", tags: ["事實查證","學術搜尋","來源引用"] },
+            "Grok": { n: "Grok", sub: "Real-time Rebel", m: "叛逆型 / 偵查員", s: "X 平台實時資訊流", f: "時事追蹤、社會觀察", diff: "唯一無縫接入 X 實時數據，態度直接、具備獨特諷刺幽默感的實務情報源。", physics: "85%", hall: "25% (風格直白大膽)", match: "適合科技愛好者、社交媒體觀察者。不喜歡被傳統道德教條過度約束的靈魂。", work: "唯一無縫接入 X 實時數據，態度直接、具備獨特諷刺幽默感的實務情報源。", tags: ["實時趨勢","資訊擷取","幽默風格"] },
+            "Llama": { n: "Llama", sub: "Open Power", m: "駭客型 / 自主者", s: "本地部署與客製化", f: "隱私保護、微調開發", diff: "全球最強開源模型，支援私有化部署，確保數據主權不離開本地。", physics: "94%", hall: "18%", match: "適合對隱私極度敏感的技術領袖。不希望任何公司數據傳送至雲端的團隊。", work: "全球最強開源模型，支援私有化部署，確保數據主權不離開本地。", tags: ["本地運行","高度自定義","隱私安全"] },
+            "NotebookLM": { n: "NotebookLM", sub: "Knowledge Node", m: "鑽研型 / 整理師", s: "播客式數據總結", f: "文獻研讀、筆記整理", diff: "將 AI 轉化為私人資料館長，獨家支援來源導向的深度對話與音訊生成摘要。", physics: "97%", hall: "3% (嚴格遵循原始文檔)", match: "適合研究生、記者、需要快速掌握大量異質資料核心觀點的專業讀者。", work: "將 AI 轉化為私人資料館長，獨家支援來源導向的深度對話與音訊生成摘要。", tags: ["文檔總結","AI播客","研究輔助"] },
+            "DeepSeek": { n: "DeepSeek", sub: "Logic Frontier", m: "冷靜型 / 推理者", s: "極致邏輯推理力", f: "代碼挑戰、數學計算", diff: "針對數學運算與代碼編寫進行極限優化，性價比極高且推理鏈路透明。", physics: "96%", hall: "12%", match: "適合需要處理高難度邏輯的開發者。偏好解決硬核技術問題的理性靈魂。", work: "針對數學運算與代碼編寫進行極限優化，性價比極高且推理鏈路透明。", tags: ["程式開發","極限推理","代碼生成"] }
+        };
+
+        const resultMapping = {
+            creator: productsDB["Claude"],
+            analyst: productsDB["DeepSeek"],
+            companion: productsDB["Gemini"],
+            pilot: productsDB["ChatGPT"]
+        };
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function handleStart() {
+            playPing(600);
+            setTimeout(() => playPing(900), 100);
+            shuffledQuestions = shuffleArray([...originalQuestions]);
+            currentQ = 0;
+            scores = { creator: 0, analyst: 0, companion: 0, pilot: 0 };
+            gsap.to("#scene-start", { autoAlpha: 0, y: -20, duration: 0.5, onComplete: () => {
+                document.getElementById('scene-start').classList.remove('active');
+                document.getElementById('scene-quiz').classList.add('active');
+                gsap.fromTo("#scene-quiz", { autoAlpha: 0, y: 20 }, { autoAlpha: 1, y: 0, duration: 0.6 });
+                renderQuestion();
+            }});
+        }
+
+        function renderQuestion() {
+            const data = shuffledQuestions[currentQ];
+            const dots = document.querySelectorAll('.progress-dot');
+            dots.forEach((dot, i) => dot.classList.toggle('active', i === currentQ));
+            document.getElementById('question-index').innerText = `Phase . 0${currentQ + 1}`;
+            document.getElementById('question-text').innerText = data.q;
+            const grid = document.getElementById('options-grid');
+            grid.innerHTML = "";
+            data.o.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "option-btn w-full p-5 md:p-6 rounded-2xl text-left text-xs md:text-base font-light tracking-wide";
+                btn.innerText = opt.t;
+                btn.onclick = () => selectOption(opt.s);
+                grid.appendChild(btn);
+                gsap.fromTo(btn, { x: -15, autoAlpha: 0 }, { x: 0, autoAlpha: 1, duration: 0.4, delay: 0.2 + idx * 0.08 });
+            });
+        }
+
+        function selectOption(s) {
+            if (isTransitioning) return;
+            isTransitioning = true;
+            playPing(1100);
+            scores[s]++;
+            currentQ++;
+            gsap.to(["#options-grid", "#question-content"], { 
+                autoAlpha: 0, x: 15, duration: 0.4, stagger: 0.1,
+                onComplete: () => {
+                    if (currentQ < shuffledQuestions.length) {
+                        renderQuestion();
+                        gsap.set(["#options-grid", "#question-content"], { x: -15 });
+                        gsap.to(["#options-grid", "#question-content"], { autoAlpha: 1, x: 0, duration: 0.4 });
+                        isTransitioning = false;
+                    } else {
+                        showResult();
+                    }
+                }
+            });
+        }
+
+        function showResult() {
+            let maxKey = 'pilot';
+            let maxVal = -1;
+            for(let k in scores) { if(scores[k] > maxVal) { maxVal = scores[k]; maxKey = k; } }
+            const res = resultMapping[maxKey];
+            document.getElementById('result-name').innerText = res.n;
+            document.getElementById('result-aura').style.backgroundColor = (maxKey === 'creator' ? '#ffe182' : (maxKey === 'analyst' ? '#82ffb1' : (maxKey === 'companion' ? '#82daff' : '#ffffff')));
+            document.getElementById('result-aura').style.boxShadow = `0 0 50px ${document.getElementById('result-aura').style.backgroundColor}`;
+            document.getElementById('result-desc').innerText = "感應結果顯示，你的頻率最契合「" + res.m + "」的屬性。你追求的是" + res.s + "，這與 " + res.n + " 的底層架構完美共振。";
+            const flist = document.getElementById('result-features');
+            flist.innerHTML = `<li>✦ ${res.s}</li><li>✦ 推薦場景：${res.f}</li><li>✦ 獨特差異：${res.diff}</li>`;
+            document.getElementById('result-logic').innerText = res.match;
+            gsap.to("#scene-quiz", { autoAlpha: 0, duration: 0.5, onComplete: () => {
+                document.getElementById('scene-quiz').classList.remove('active');
+                document.getElementById('scene-result').classList.add('active');
+                gsap.fromTo("#scene-result", { autoAlpha: 0, y: 30 }, { autoAlpha: 1, y: 0, duration: 0.8, ease: "power2.out" });
+            }});
+        }
+
+        function showComparison() {
+            playPing(1200);
+            const body = document.getElementById('comparison-body');
+            body.innerHTML = "";
+            Object.keys(productsDB).forEach((key, idx) => {
+                const item = productsDB[key];
+                const tr = document.createElement('tr');
+                tr.className = "table-row";
+                tr.innerHTML = `
+                    <td class="py-6 md:py-7 font-bold text-white cursor-pointer product-link" onclick="openDetail('${key}')">${item.n}</td>
+                    <td class="py-6 md:py-7 text-white/70 text-[11px] md:text-sm leading-relaxed pr-6">${item.diff}</td>
+                    <td class="py-6 md:py-7 text-white/40 text-[9px] md:text-[10px] uppercase font-bold tracking-widest">${item.m}</td>
+                    <td class="py-6 md:py-7 text-white/60 text-[11px] md:text-xs">${item.tags[0]} / ${item.tags[1]}</td>
+                `;
+                body.appendChild(tr);
+            });
+            gsap.to("#scene-result", { autoAlpha: 0, duration: 0.4, onComplete: () => {
+                document.getElementById('scene-result').classList.remove('active');
+                document.getElementById('scene-comparison').classList.add('active');
+                gsap.fromTo("#scene-comparison", { autoAlpha: 0, x: 20 }, { autoAlpha: 1, x: 0, duration: 0.6 });
+            }});
+        }
+
+        function openDetail(key) {
+            playPing(1400);
+            const data = productsDB[key];
+            document.getElementById('modal-title').innerText = data.n;
+            document.getElementById('modal-subtitle').innerText = data.sub;
+            document.getElementById('modal-physics').innerText = data.physics;
+            document.getElementById('modal-hallucination').innerText = data.hall;
+            document.getElementById('modal-match').innerText = data.match;
+            document.getElementById('modal-workflow').innerText = data.diff; // 改為顯示關鍵差異
+            const tagsCont = document.getElementById('modal-tags');
+            tagsCont.innerHTML = "";
+            data.tags.forEach(t => {
+                const span = document.createElement('span');
+                span.className = "px-3 py-1 md:px-4 md:py-1.5 bg-white/10 rounded-full border border-white/5 text-white/70 font-light";
+                span.innerText = t;
+                tagsCont.appendChild(span);
+            });
+            document.getElementById('modal-overlay').style.display = 'flex';
+            gsap.fromTo("#modal-overlay .glass-panel", { scale: 0.9, autoAlpha: 0 }, { scale: 1, autoAlpha: 1, duration: 0.5, ease: "expo.out" });
+        }
+
+        function closeModal() {
+            playPing(600);
+            gsap.to("#modal-overlay .glass-panel", { scale: 0.95, autoAlpha: 0, duration: 0.3, onComplete: () => {
+                document.getElementById('modal-overlay').style.display = 'none';
+            }});
+        }
+
+        function backToResult() {
+            playPing(700);
+            gsap.to("#scene-comparison", { autoAlpha: 0, duration: 0.4, onComplete: () => {
+                document.getElementById('scene-comparison').classList.remove('active');
+                document.getElementById('scene-result').classList.add('active');
+                gsap.fromTo("#scene-result", { autoAlpha: 0, x: -20 }, { autoAlpha: 1, x: 0, duration: 0.5 });
+            }});
+        }
+
+        window.addEventListener('load', () => {
+            gsap.to('#main-title', { autoAlpha: 1, y: 0, duration: 1.2, ease: "power4.out", delay: 0.3 });
+            gsap.to('#sub-title', { autoAlpha: 1, duration: 1, delay: 0.7 });
+            gsap.to('#start-btn-container', { autoAlpha: 1, scale: 1, duration: 1, delay: 1, ease: "back.out" });
+        });
+    </script>
+</body>
+</html>
